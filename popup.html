@@ -1,0 +1,134 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>BlueMind</title>
+  <link rel="stylesheet" href="popup.css" />
+</head>
+<body>
+  <div class="app">
+
+    <!-- Header -->
+    <header class="header">
+      <div class="header-left">
+        <div class="logo">🔵</div>
+        <div>
+          <div class="app-name">BlueMind</div>
+          <div id="studyDay" class="study-day">Day 1 of 14</div>
+        </div>
+      </div>
+      <div id="currentDate" class="current-date"></div>
+    </header>
+
+    <!-- Current Tab Status -->
+    <div class="card current-tab-card">
+      <div class="card-label">Currently on</div>
+      <div class="current-tab-row">
+        <span id="currentDomain" class="current-domain">—</span>
+        <span id="currentCategory" class="category-badge">—</span>
+      </div>
+      <div id="currentTabTime" class="current-tab-time">0s on this tab</div>
+    </div>
+
+    <!-- Today Stats -->
+    <div class="stats-grid">
+      <div class="stat-card">
+        <div class="stat-value" id="statSwitches">0</div>
+        <div class="stat-label">Distraction<br>Switches</div>
+      </div>
+      <div class="stat-card stat-academic">
+        <div class="stat-value" id="statAcademic">0m</div>
+        <div class="stat-label">Academic<br>Time</div>
+      </div>
+      <div class="stat-card stat-distraction">
+        <div class="stat-value" id="statDistraction">0m</div>
+        <div class="stat-label">Distraction<br>Time</div>
+      </div>
+      <div class="stat-card">
+        <div class="stat-value" id="statTotal">0</div>
+        <div class="stat-label">Total Tab<br>Sessions</div>
+      </div>
+    </div>
+
+    <!-- Hour Bar Chart -->
+    <div class="card">
+      <div class="card-label">Today's Focus by Hour</div>
+      <div id="hourBar" class="hour-bar-container"></div>
+      <div class="hour-legend">
+        <span class="legend-dot academic"></span>Academic
+        <span class="legend-dot distraction"></span>Distraction
+        <span class="legend-dot other"></span>Other
+      </div>
+    </div>
+
+    <!-- Pomodoro Timer -->
+    <div class="card pomodoro-card">
+      <div class="card-label">🍅 Pomodoro Study Timer</div>
+      <div class="pomodoro-body">
+        <div class="pomodoro-circle">
+          <svg viewBox="0 0 100 100" class="pomo-svg">
+            <circle cx="50" cy="50" r="42" class="pomo-track" />
+            <circle cx="50" cy="50" r="42" class="pomo-progress" id="pomoProgress" />
+          </svg>
+          <div class="pomo-center">
+            <div id="pomoTime" class="pomo-time">25:00</div>
+            <div id="pomoPhase" class="pomo-phase">Focus</div>
+          </div>
+        </div>
+        <div class="pomo-controls">
+          <div id="pomoSessionDots" class="pomo-dots"></div>
+          <div class="pomo-buttons">
+            <button id="btnPomoStart" class="btn btn-primary">Start</button>
+            <button id="btnPomoStop" class="btn btn-ghost" style="display:none">Stop</button>
+          </div>
+          <div class="pomo-break-buttons" id="pomoBreakButtons" style="display:none">
+            <button id="btnShortBreak" class="btn btn-sm btn-success">5m Break</button>
+            <button id="btnLongBreak" class="btn btn-sm btn-success">15m Break</button>
+          </div>
+          <div id="pomoCompleted" class="pomo-completed">0 sessions today</div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Wellness Reminders -->
+    <div class="card reminders-card">
+      <div class="card-label">Wellness Reminders</div>
+      <div class="reminder-row">
+        <div class="reminder-info">
+          <span class="reminder-icon">💧</span>
+          <div>
+            <div class="reminder-title">Hydration</div>
+            <div class="reminder-sub">Every 60 minutes</div>
+          </div>
+        </div>
+        <label class="toggle">
+          <input type="checkbox" id="reminderToggle" checked />
+          <span class="toggle-slider"></span>
+        </label>
+      </div>
+      <div class="reminder-row">
+        <div class="reminder-info">
+          <span class="reminder-icon">👁️</span>
+          <div>
+            <div class="reminder-title">20-20-20 Eye Rule</div>
+            <div class="reminder-sub">Every 20 minutes</div>
+          </div>
+        </div>
+        <span class="reminder-status" id="eyeRestStatus">Active</span>
+      </div>
+    </div>
+
+    <!-- Data Export -->
+    <div class="card export-card">
+      <div class="export-info">
+        <div class="card-label">Research Data Export</div>
+        <div id="exportMeta" class="export-meta">Loading...</div>
+      </div>
+      <button id="btnDownloadCSV" class="btn btn-export">⬇ Download CSV</button>
+    </div>
+
+  </div>
+  <script src="popup.js"></script>
+</body>
+</html>
