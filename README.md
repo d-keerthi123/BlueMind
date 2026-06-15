@@ -126,8 +126,6 @@ Every tab visit is recorded with the following data fields:
 | **IdleSeconds** | Seconds the user was idle/away during that tab session | `12` |
 | **ActiveSeconds** | Seconds of genuine active engagement (`Duration − Idle`) | `35` |
 
-> 💡 **Tip:** Use `ActiveSeconds` (not `DurationSeconds`) in your AFI calculation for more accurate academic time measurement.
-
 ---
 
 ## 📥 Exporting Data
@@ -136,10 +134,6 @@ Every tab visit is recorded with the following data fields:
 2. Scroll to the bottom of the popup interface.
 3. Click the **"⬇ Download CSV"** button.
 4. A file named `blst_data_YYYY-MM-DD.csv` will download automatically to your system.
-
-**Open in:** Microsoft Excel, Google Sheets, or any data analysis tool (Python, R, SPSS).
-
-> ⚠️ **Important:** Participants should export this file exactly at the end of the 14-day study period. Do not clear browser data during the active tracking period.
 
 ---
 
@@ -150,8 +144,6 @@ Every tab visit is recorded with the following data fields:
 
 ### 🍿 Distraction Sites
 `instagram.com` · `youtube.com` · `netflix.com` · `twitter.com` · `x.com` · `facebook.com` · `snapchat.com` · `tiktok.com` · `reddit.com` · `discord.com` · `web.whatsapp.com` · `web.telegram.org` · `twitch.tv` · `hotstar.com` · `primevideo.com` · `flipkart.com` · `amazon.in` · `myntra.com` · `ajio.com` · `meesho.com` · `timesofindia.com` · `ndtv.com` · `9gag.com` · `buzzfeed.com` · `pinterest.com`
-
-> ⚙️ **Customization:** To supplement or modify this target list, edit the `ACADEMIC_DOMAINS` and `DISTRACTION_DOMAINS` array elements declared inside `background.js`.
 
 ---
 
