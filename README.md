@@ -157,15 +157,6 @@ Every tab visit is recorded with the following data fields:
 | **Export Routine** | One single dataset download action requested on Day 14 |
 | **Privacy Safeguards** | All metrics remain local — no central server data access, no accounts required |
 | **Distribution** | Direct package deployment → Loaded locally via Developer Mode |
-
-### Attention Fragmentation Index Calculation
-
-$$\text{AFI} = \frac{\text{Total Distraction Switches}}{\text{Total ActiveSeconds} / 3600}$$
-
-* Use `ActiveSeconds` (not `DurationSeconds`) to exclude idle time from academic hours.
-* Compute values individually per participant per day across your study using the exported CSV log rows.
-* Map and compare daytime focus cycles (**9:00 AM – 6:00 PM**) directly against late-night trends (**10:00 PM – 2:00 AM**) using the logged `HourOfDay` indices.
-
 ---
 
 ## 🧰 Tech Stack
@@ -211,8 +202,3 @@ chrome-extension/
 
 ---
 
-## 👩‍💻 Built By
-
-Developed as part of a research project on **"Impact of Blue Light Exposure on Metabolic Health and Academic Productivity"** — focusing on Indian undergraduate students.
-
----
