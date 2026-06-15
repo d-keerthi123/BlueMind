@@ -41,6 +41,7 @@ $$\text{AFI} = \frac{\text{Distraction Switches}}{\text{Academic Time (Hours)}}$
 | **⏱️ Time on Tab** | Records exact seconds spent on each website before switching. |
 | **🏷️ Auto Site Categorisation** | Automatically classifies sites as *Academic*, *Distraction*, or *Other*. |
 | **🕐 Hour of Day Tracking** | Records which hour each session occurred (0–23) for day vs. night analysis. |
+| **😴 Idle Detection** | Separates active screen time from idle/away time for accurate engagement metrics. |
 | **📅 14-Day Study Period** | Tracks which day of the study period each session belongs to. |
 | **📊 Live Stats Popup** | Shows today's switches, academic time, distraction time, and an hourly bar chart. |
 | **🍅 Pomodoro Timer** | Built-in 25/5/15 min Pomodoro study timer with session tracking. |
@@ -86,7 +87,12 @@ Click the puzzle piece icon (🧩) in your browser's toolbar and pin **BlueMind*
 ### Tab Tracking
 * Listens to the `chrome.tabs.onActivated` API event, which fires every time the user changes tabs.
 * Records the URL, domain, category, timestamp, and duration for every tab visit.
-* Specifically flags academic $\rightarrow$ distraction context switches and logs them cleanly for running AFI statistical models.
+* Specifically flags academic → distraction context switches and logs them cleanly for running AFI statistical models.
+
+### Idle Detection
+* Uses the `chrome.idle` API with a 60-second detection interval.
+* Each session's time is split into `IdleSeconds` (user away from keyboard) and `ActiveSeconds` (genuine screen engagement).
+* The AFI calculation uses `ActiveSeconds` — not raw duration — for more accurate academic time measurement.
 
 ### Reminders
 * Leverages the `chrome.alarms` API to ensure background tasks survive browser minimization and system idle states.
@@ -110,13 +116,17 @@ Click the puzzle piece icon (🧩) in your browser's toolbar and pin **BlueMind*
 
 Every tab visit is recorded with the following data fields:
 
-| Column | Description | Example Row Value |
+| Column | Description | Example Value |
 | :--- | :--- | :--- |
 | **Timestamp** | ISO 8601 datetime when tab was opened | `2026-06-09T14:32:11.000Z` |
 | **HourOfDay** | Hour (0–23) when the session occurred | `14` |
 | **Website** | Full URL of the visited page | `https://en.wikipedia.org/wiki/...` |
 | **Category** | Classification bucket | `Academic` |
-| **DurationSeconds** | Seconds spent on the tab before switching away | `47` |
+| **DurationSeconds** | Total seconds on the tab before switching away | `47` |
+| **IdleSeconds** | Seconds the user was idle/away during that tab session | `12` |
+| **ActiveSeconds** | Seconds of genuine active engagement (`Duration − Idle`) | `35` |
+
+> 💡 **Tip:** Use `ActiveSeconds` (not `DurationSeconds`) in your AFI calculation for more accurate academic time measurement.
 
 ---
 
@@ -127,6 +137,8 @@ Every tab visit is recorded with the following data fields:
 3. Click the **"⬇ Download CSV"** button.
 4. A file named `blst_data_YYYY-MM-DD.csv` will download automatically to your system.
 
+**Open in:** Microsoft Excel, Google Sheets, or any data analysis tool (Python, R, SPSS).
+
 > ⚠️ **Important:** Participants should export this file exactly at the end of the 14-day study period. Do not clear browser data during the active tracking period.
 
 ---
@@ -134,7 +146,7 @@ Every tab visit is recorded with the following data fields:
 ## 🏷️ Site Categories
 
 ### 🎓 Academic Sites
-`scholar.google.com` · `wikipedia.org` · `github.com` · `stackoverflow.com` · `coursera.org` · `edx.org` · `khanacademy.org` · `nptel.ac.in` · `swayam.gov.in` · `geeksforgeeks.org` · `hackerrank.com` · `leetcode.com` · `codechef.com` · `arxiv.org` · `researchgate.net` · `pubmed.ncbi.nlm.nih.gov` · `jstor.org` · `springer.com` · `sciencedirect.com` · `ieee.org` · `docs.google.com` · `classroom.google.com` · `overleaf.com` · `zoom.us` · `desmos.com` · `notion.so` · `quizlet.com` · **All domains ending in `.edu` and `.ac.in`**
+`scholar.google.com` · `wikipedia.org` · `github.com` · `stackoverflow.com` · `coursera.org` · `edx.org` · `khanacademy.org` · `nptel.ac.in` · `swayam.gov.in` · `geeksforgeeks.org` · `hackerrank.com` · `leetcode.com` · `codechef.com` · `arxiv.org` · `researchgate.net` · `pubmed.ncbi.nlm.nih.gov` · `jstor.org` · `springer.com` · `sciencedirect.com` · `ieee.org` · `docs.google.com` · `classroom.google.com` · `overleaf.com` · `zoom.us` · `desmos.com` · `notion.so` · `chatgpt.com` · `wolframalpha.com` · `brilliant.org` · all `.edu` and `.ac.in` domains
 
 ### 🍿 Distraction Sites
 `instagram.com` · `youtube.com` · `netflix.com` · `twitter.com` · `x.com` · `facebook.com` · `snapchat.com` · `tiktok.com` · `reddit.com` · `discord.com` · `web.whatsapp.com` · `web.telegram.org` · `twitch.tv` · `hotstar.com` · `primevideo.com` · `flipkart.com` · `amazon.in` · `myntra.com` · `ajio.com` · `meesho.com` · `timesofindia.com` · `ndtv.com` · `9gag.com` · `buzzfeed.com` · `pinterest.com`
@@ -152,11 +164,13 @@ Every tab visit is recorded with the following data fields:
 | **Data Collection** | Passive logging — runs automatically, no manual log sheets required |
 | **Export Routine** | One single dataset download action requested on Day 14 |
 | **Privacy Safeguards** | All metrics remain local — no central server data access, no accounts required |
-| **Distribution** | Direct package deployment $\rightarrow$ Loaded locally via Developer Mode |
+| **Distribution** | Direct package deployment → Loaded locally via Developer Mode |
 
 ### Attention Fragmentation Index Calculation
-$$\text{AFI} = \frac{\text{Total Distraction Switches}}{\text{Total Academic Seconds} / 3600}$$
 
+$$\text{AFI} = \frac{\text{Total Distraction Switches}}{\text{Total ActiveSeconds} / 3600}$$
+
+* Use `ActiveSeconds` (not `DurationSeconds`) to exclude idle time from academic hours.
 * Compute values individually per participant per day across your study using the exported CSV log rows.
 * Map and compare daytime focus cycles (**9:00 AM – 6:00 PM**) directly against late-night trends (**10:00 PM – 2:00 AM**) using the logged `HourOfDay` indices.
 
@@ -177,13 +191,36 @@ $$\text{AFI} = \frac{\text{Total Distraction Switches}}{\text{Total Academic Sec
 chrome-extension/
 │
 ├── manifest.json            # Extension configuration (Manifest V3 metadata & permissions)
-├── background.js            # Service worker handling tab loops, site scoring, and alarms
+├── background.js            # Service worker — tab tracking, idle detection, alarms
 ├── popup.html               # Extension UI interface layout window
 ├── popup.css                # Polished stylesheet for popup UI styling layout
-├── popup.js                 # UI companion scripting (timers, live canvas updates, and data building)
+├── popup.js                 # UI companion scripting (timers, live canvas updates, CSV export)
+├── README.md                # This file
 │
 └── icons/
-    ├── generate-icons.html  # Helper to generate base image resolutions
-    ├── icon16.png           # Extension tab asset
-    ├── icon48.png           # Settings panel dashboard icon asset
-    └── icon128.png          # Main marketplace listing graphic asset
+    ├── generate-icons.html  # Open in browser to generate blue PNG icons
+    ├── icon16.png           # Toolbar icon (16×16)
+    ├── icon48.png           # Extensions page icon (48×48)
+    └── icon128.png          # Chrome Web Store icon (128×128)
+```
+
+---
+
+## 👤 For Participants
+
+1. **Install** the extension by following the Installation steps above.
+2. **Use your browser normally** — BlueMind runs silently in the background.
+3. **Keep the extension enabled** for the full 14-day study period.
+4. **Do not clear browser data** during the study period.
+5. On **Day 14**, click the BlueMind icon → scroll down → click **"⬇ Download CSV"**.
+6. **Send the CSV file** to the researcher as instructed.
+
+> 🔒 **Privacy:** The extension does **not** collect passwords, personal messages, or any sensitive data — only website URLs, time spent, and category. All data stays on your device. Nothing is uploaded or shared automatically.
+
+---
+
+## 👩‍💻 Built By
+
+Developed as part of a research project on **"Impact of Blue Light Exposure on Metabolic Health and Academic Productivity"** — focusing on Indian undergraduate students.
+
+---
