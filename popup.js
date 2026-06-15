@@ -202,9 +202,9 @@ document.getElementById("btnDownloadCSV").addEventListener("click", async () => 
   }
 
   const dateStr = new Date().toISOString().slice(0, 10);
-  const headers = ["Timestamp", "HourOfDay", "Website", "Category", "DurationSeconds"];
+  const headers = ["Timestamp", "HourOfDay", "Website", "Category", "DurationSeconds", "IdleSeconds", "ActiveSeconds"];
   const rows = sessions.map(s =>
-    [s.timestamp, s.hour, s.url, cap(s.category), s.duration_seconds].map(esc).join(",")
+    [s.timestamp, s.hour, s.url, cap(s.category), s.duration_seconds, s.idle_seconds ?? 0, s.active_seconds ?? s.duration_seconds].map(esc).join(",")
   );
   const csv = [headers.join(","), ...rows].join("\n");
 

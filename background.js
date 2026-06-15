@@ -2,7 +2,7 @@
 
 const ACADEMIC_DOMAINS = new Set([
   // Search & Reference
-  "scholar.google.com", "wikipedia.org", "wolframalpha.com",
+  "scholar.google.com", "wikipedia.org", "wolframalpha.com", "chatgpt.com",
   // MOOCs & Courses
   "coursera.org", "edx.org", "khanacademy.org", "udemy.com", "udacity.com",
   "nptel.ac.in", "swayam.gov.in", "skillshare.com", "brilliant.org",
@@ -54,7 +54,6 @@ function classifyDomain(url) {
     for (const domain of DISTRACTION_DOMAINS) {
       if (hostname === domain || hostname.endsWith("." + domain)) return "distraction";
     }
-    // .edu and .ac.in are academic
     if (hostname.endsWith(".edu") || hostname.endsWith(".ac.in") || hostname.endsWith(".edu.in")) {
       return "academic";
     }
@@ -76,30 +75,52 @@ function getDomain(url) {
 
 let activeTabId = null;
 let activeTabUrl = null;
-let activeTabStart = null; // timestamp ms when tab became active
+let activeTabStart = null;
+
+// ─── Idle Detection State ─────────────────────────────────────────────────────
+
+let isIdle = false;
+let idleStart = null;
+let currentSessionIdleSeconds = 0;
+const IDLE_THRESHOLD_SECONDS = 60;
 
 // ─── Session Recording ────────────────────────────────────────────────────────
 
 async function recordSession(url, startMs, endMs) {
   if (!url || !startMs || !endMs) return;
-  const duration = Math.round((endMs - startMs) / 1000);
-  if (duration < 1) return; // ignore sub-second blips
+
+  const totalDuration = Math.round((endMs - startMs) / 1000);
+  if (totalDuration < 1) return;
+
+  let idleSec = currentSessionIdleSeconds;
+  if (isIdle && idleStart) {
+    idleSec += Math.round((endMs - idleStart) / 1000);
+  }
+  idleSec = Math.min(idleSec, totalDuration);
+  const activeDuration = Math.max(0, totalDuration - idleSec);
+
+  currentSessionIdleSeconds = 0;
+  if (isIdle) idleStart = endMs;
 
   const category = classifyDomain(url);
   if (category === "system") return;
 
   const domain = getDomain(url);
   const now = new Date(startMs);
-  const dateKey = now.toISOString().slice(0, 10); // YYYY-MM-DD
+  const dateKey = now.toISOString().slice(0, 10);
   const hour = now.getHours();
   const timestamp = now.toISOString();
 
-  const session = { timestamp, date: dateKey, hour, domain, url, category, duration_seconds: duration };
+  const session = {
+    timestamp, date: dateKey, hour, domain, url, category,
+    duration_seconds: totalDuration,
+    idle_seconds: idleSec,
+    active_seconds: activeDuration,
+  };
 
-  const result = await chrome.storage.local.get(["sessions", "studyStartDate", "dayNumber"]);
+  const result = await chrome.storage.local.get(["sessions", "studyStartDate"]);
   const sessions = result.sessions || [];
 
-  // Track study start date
   let studyStartDate = result.studyStartDate;
   if (!studyStartDate) {
     studyStartDate = dateKey;
@@ -114,7 +135,6 @@ async function recordSession(url, startMs, endMs) {
   sessions.push(session);
   await chrome.storage.local.set({ sessions });
 
-  // Track tab switch: was previous category academic and new is distraction?
   await updateSwitchCount(url, startMs);
 }
 
@@ -142,13 +162,9 @@ async function updateSwitchCount(newUrl, nowMs) {
 
 chrome.tabs.onActivated.addListener(async (activeInfo) => {
   const now = Date.now();
-
-  // Record time on previous tab
   if (activeTabUrl && activeTabStart) {
     await recordSession(activeTabUrl, activeTabStart, now);
   }
-
-  // Start tracking new tab
   activeTabId = activeInfo.tabId;
   activeTabStart = now;
   try {
@@ -162,9 +178,7 @@ chrome.tabs.onActivated.addListener(async (activeInfo) => {
 chrome.tabs.onUpdated.addListener(async (tabId, changeInfo, tab) => {
   if (tabId !== activeTabId) return;
   if (changeInfo.status !== "complete" || !changeInfo.url) return;
-
   const now = Date.now();
-  // Record time on previous URL within same tab (navigation)
   if (activeTabUrl && activeTabStart && activeTabUrl !== changeInfo.url) {
     await recordSession(activeTabUrl, activeTabStart, now);
     activeTabStart = now;
@@ -186,16 +200,38 @@ chrome.tabs.onRemoved.addListener(async (tabId) => {
   activeTabStart = null;
 });
 
+// ─── Idle Detection Listener ──────────────────────────────────────────────────
+
+chrome.idle.onStateChanged.addListener((newState) => {
+  const now = Date.now();
+  if (newState === "idle" || newState === "locked") {
+    if (!isIdle) {
+      isIdle = true;
+      idleStart = now;
+    }
+  } else if (newState === "active") {
+    if (isIdle && idleStart) {
+      const idledFor = Math.round((now - idleStart) / 1000);
+      currentSessionIdleSeconds += idledFor;
+    }
+    isIdle = false;
+    idleStart = null;
+  }
+});
+
 // ─── Alarms: Wellness Reminders ───────────────────────────────────────────────
 
 async function setupAlarms() {
   const result = await chrome.storage.local.get("remindersEnabled");
-  const enabled = result.remindersEnabled !== false; // default true
+  const enabled = result.remindersEnabled !== false;
 
   if (enabled) {
     await chrome.alarms.create("waterReminder", { periodInMinutes: 60 });
     await chrome.alarms.create("eyeRestReminder", { periodInMinutes: 20 });
   }
+
+  // ✅ Inside setupAlarms — correct place
+  chrome.idle.setDetectionInterval(IDLE_THRESHOLD_SECONDS);
 }
 
 chrome.alarms.onAlarm.addListener(async (alarm) => {
@@ -243,7 +279,7 @@ chrome.alarms.onAlarm.addListener(async (alarm) => {
       state.minutesLeft = 25;
       chrome.notifications.create("pomo_" + Date.now(), {
         type: "basic",
-        iconUrl: "icons/icon48.png",
+        iconUrl: "data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAYAAAAfFcSJAAAADUlEQVR42mNk+M9QDwADhgGAWjR9awAAAABJRU5ErkJggg==",
         title: "🍅 Break Over — Back to Work!",
         message: "Your break is done. Start your next 25-minute focus session.",
         priority: 2,

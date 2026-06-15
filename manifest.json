@@ -3,7 +3,8 @@
   "name": "BlueMind",
   "version": "1.0.0",
   "description": "Research tool tracking tab switches, academic vs distraction time, and wellness reminders for blue light exposure study.",
-  "permissions": ["tabs", "storage", "alarms", "notifications", "activeTab"],
+  "permissions": ["tabs", "storage", "alarms", "notifications", "activeTab","idle"
+],
   "host_permissions": ["<all_urls>"],
   "background": {
     "service_worker": "background.js",
